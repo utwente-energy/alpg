@@ -50,7 +50,7 @@ def writeCsvRow(fname, hnum, data):
 				f.write(line)
 				j = j + 1	
 
-def writeNeighbourhood(num):
+#def writeNeighbourhood(num):
 	#Write specific neighbourhood data if required, see the Triana example:
 	#configFile = []
 	#configFile.append('\tif houseNum == '+str(num)+':')
