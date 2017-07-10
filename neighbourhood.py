@@ -67,7 +67,8 @@ class neighbourhood:
 						config.householdList[j].hasEV = True
 						added = True
 				j = j + 1
-		#Shuffle
+	
+	#Shuffle
 	random.shuffle(config.householdList)
 		
 	#And then map households to houses

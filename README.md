@@ -107,3 +107,14 @@ PhotovoltaicSettings.txt:
 ```
 <houseID>: <angle in degrees>, <aimuth in degrees>, <efficiency in percent>, <size in m2 (square meter)>
 ```
+
+
+Changelog
+--------------
+
+**Version 1.1**
+- Fixed retired people to have no driving distance to work
+- Fixed dishwasher profile
+- More rounded timeshiftable times to avoid synchronisation with auctions pushing towards the runtime deadlines
+- Fixed a bug resulting in overlapping start + endtimes for EVs
+

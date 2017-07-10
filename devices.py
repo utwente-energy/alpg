@@ -432,15 +432,15 @@ class DeviceWashingMachine(TimeShiftableDevice):
 			self.StartTimes.append(washingtimeintervals + (1440*(day)))
 			
 		if washingtimeintervals < 4*60:
-			self.EndTimes.append(1440*(day) + 7*60)
+			self.EndTimes.append(1440*(day) + random.randint(6.5*60,7.5*60))
 		elif washingtimeintervals < 11*60:
 			self.EndTimes.append(1440*(day) + random.randint(14*60,17*60))
 		elif washingtimeintervals < 17*60:
-			self.EndTimes.append(1440*(day) + random.randint(20*60,22.5*60))
+			self.EndTimes.append(1440*(day) + random.randint(20*60,22*60))
 		elif washingtimeintervals < 20*60:
 			self.EndTimes.append(1440*(day) + random.randint(22*60,23*60))
 		else:
-			self.EndTimes.append(1440*(day+1) + 7*60)
+			self.EndTimes.append(1440*(day+1) + random.randint(6.5*60,7.5*60))
 
 		#check for overlap on endTimes:
 		if self.EndTimes[len(self.EndTimes)-1] < self.StartTimes[len(self.StartTimes)-1] + 90:
@@ -478,14 +478,14 @@ class DeviceDishwasher(TimeShiftableDevice):
 		else:
 			self.StartTimes.append(dishwashtimeintervals + (1440*(day)))
 	
-		if dishwashtimeintervals < 5*60:
-			self.EndTimes.append(1440*(day) + 7*60)
-		elif dishwashtimeintervals < 16*60:
-			self.EndTimes.append(1440*(day) + 18*60)
-		elif dishwashtimeintervals < 20*60:
-			self.EndTimes.append(1440*(day) + 23*60)
+		if dishwashtimeintervals < 4*60:
+			self.EndTimes.append(1440*(day) + random.randint(6*60,7.60))
+		elif dishwashtimeintervals < 13*60:
+			self.EndTimes.append(1440*(day) + random.randint(17*60,18*60))
+		elif dishwashtimeintervals < 19.5*60:
+			self.EndTimes.append(1440*(day) + random.randint(22*60,23*60))
 		else:
-			self.EndTimes.append(1440*(day+1) + 8*60)
+			self.EndTimes.append(1440*(day+1) + random.randint(6*60,7*60))
 			
 		#check for overlap on endTimes:
 		if self.EndTimes[len(self.EndTimes)-1] < self.StartTimes[len(self.StartTimes)-1] + 2*60:
@@ -494,7 +494,7 @@ class DeviceDishwasher(TimeShiftableDevice):
 			
 	def generate(self, consumption = 0):
 		self.LongProfile = 'complex(2.343792, 9.91720178381),complex(0.705584, 8.79153133754),complex(0.078676, 7.86720661017),complex(0.078744, 7.87400627016),complex(0.078948, 7.89440525013),complex(0.079152, 7.91480423011),complex(0.079016, 7.90120491012),complex(0.078812, 7.88080593015),complex(0.941108, 3.10574286964),complex(10.449, 18.0981988883),complex(4.523148, 1.78766247656),complex(34.157214, 15.5624864632),complex(155.116416, 70.6731270362),complex(158.38641, 72.1629803176),complex(158.790988, 67.6446776265),complex(158.318433, 72.1320090814),complex(158.654276, 67.5864385584),complex(131.583375, 109.033724507),complex(13.91745, 13.0299198193),complex(4.489968, 1.91271835851),complex(1693.082112, 669.148867416),complex(3137.819256, 447.115028245),complex(3107.713851, 442.825240368),complex(3120.197256, 444.604029241),complex(3123.464652, 445.069607955),complex(3114.653256, 443.814052026),complex(3121.27497, 444.757595169),complex(3116.305863, 444.04953577),complex(3106.801566, 442.695246796),complex(3117.703743, 444.248722882),complex(3118.851648, 444.412290486),complex(3110.016195, 443.15330662),complex(3104.806122, 442.410911425),complex(1148.154728, 416.724520071),complex(166.342624, 70.8616610914),complex(161.205252, 68.6731497838),complex(160.049824, 68.1809395169),complex(158.772588, 67.6368392593),complex(158.208076, 67.3963581543),complex(157.926096, 67.2762351774),complex(157.01364, 66.8875305491),complex(112.30272, 108.243298437),complex(11.65632, 9.35164905552),complex(17.569056, 18.4299236306),complex(4.947208, 2.10750178285),complex(4.724016, 2.012422389),complex(143.12025, 65.2075123351),complex(161.129536, 68.6408949029),complex(160.671915, 63.501604078),complex(23.764224, 12.8265693277),complex(136.853808, 62.352437012),complex(159.11184, 62.8850229849),complex(159.464682, 63.0244750664),complex(159.04302, 62.8578235805),complex(36.68544, 55.7061505818),complex(9.767628, 7.07164059421),complex(4.902772, 2.08857212612),complex(2239.315008, 885.033921728),complex(3116.846106, 444.126516228),complex(3111.034014, 443.298337972),complex(3118.112712, 444.306997808),complex(3111.809778, 443.408878355),complex(3113.442189, 443.641484325),complex(3110.529708, 443.226478259),complex(3104.676432, 442.392431601),complex(3101.093424, 441.881880613),complex(3121.076178, 444.729268843),complex(1221.232208, 443.248103556),complex(159.964185, 63.2218912841),complex(2663.07828, 966.568347525),complex(272.524675, 436.038267268),complex(7.76832, 5.82624),complex(3.258112, 1.75854256572),complex(3.299408, 1.69033685682),complex(3.295136, 1.68814824631),complex(3.256704, 1.75778260783),complex(3.258112, 1.75854256572),complex(3.262336, 1.7608224394),complex(2224.648744, 807.439674778),complex(367.142872, 587.426961418),complex(4.711025, 11.8288968082)'
-		self.ShortProfile = 'complex(55.4322002, 176.614124563),complex(1656.3692234, 589.709129277), complex(169.9537144, 479.828648509), complex(142.144421467, 411.110341273), complex(208.440397733, 419.652821089)'
+		self.ShortProfile = 'complex(663.8757034, 226.767498727),complex(2196.57335247, 342.08616054),complex(104.5642258, 49.3428956589),complex(2111.9711078, 363.134565745),complex(381.4368206, 193.026161596)'
 		self.name = "Dishwasher"
 			
 	def writeDevice(self, hnum):
@@ -544,11 +544,9 @@ class DeviceElectricalVehicle(BufferTimeshiftableDevice):
 			self.EnergyLoss.append(energyLoss) #Approx 5.5km/kWh for current (PH)EVs
 			
 			self.EndTimes.append(1440*(day+1) + person.WorkdayLeave_Avg - 30)
-			
-		if ((day+1)%7) in person.Workdays:
-			if((len(self.StartTimes) == len(self.StartTimes)) and (len(self.StartTimes) > 0)):
-				self.EndTimes.pop() #remove the dummy entry
-				self.EndTimes.append(1440*(day+1) + person.WorkdayLeave_Avg - 30)
+				
+		if len(self.EndTimes) > 0 and len(self.StartTimes) > 0:		
+			assert(self.EndTimes[-1] > 	(self.StartTimes[-1]))
 				
 	def writeDevice(self, hnum):
 		config.writer.writeDeviceBufferTimeshiftable(self, hnum)	

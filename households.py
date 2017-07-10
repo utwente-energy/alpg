@@ -506,9 +506,6 @@ class HouseholdDualRetired(Household):
 		age = random.triangular(65, 85, 70)
 		self.Persons = [ persons.PersonRetired(age), persons.PersonRetired(age)]
 		
-		#To make life easy, only one persons.Person will use the electric vehicle, so only the main persons.Person will receive a driving distance
-		self.Persons[0].setDistanceToWork(round(max(0, random.gauss(config.commuteDistanceMean, config.commuteDistanceSigma))))		
-		
 		if(random.randint(1,2) == 1):
 			self.Fridges = [ devices.DeviceFridge(random.randint(config.ConsumptionFridgeBigMin,config.ConsumptionFridgeBigMax)) ]
 		else:
@@ -532,9 +529,6 @@ class HouseholdSingleRetired(Household):
 		
 		age = random.triangular(65, 85, 70)
 		self.Persons = [ persons.PersonRetired(age)]
-		
-		#To make life easy, only one persons.Person will use the electric vehicle, so only the main persons.Person will receive a driving distance
-		self.Persons[0].setDistanceToWork(round(max(0, random.gauss(config.commuteDistanceMean, config.commuteDistanceSigma))))	
 		
 		if(random.randint(1,2) == 1):
 			self.Fridges = [ devices.DeviceFridge(random.randint(config.ConsumptionFridgeBigMin,config.ConsumptionFridgeBigMax)) ]

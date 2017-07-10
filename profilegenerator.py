@@ -24,8 +24,8 @@ import profilegentools
 
 import config
 
-print("Profilegenerator 1.0\n")
-print("Copyright (C) 2016 Gerwin Hoogsteen")
+print("Profilegenerator 1.1\n")
+print("Copyright (C) 2017 Gerwin Hoogsteen")
 print("This program comes with ABSOLUTELY NO WARRANTY.")
 print("This is free software, and you are welcome to redistribute it under certain conditions.")
 print("See the acompanying license for more information.\n")
