@@ -41,9 +41,9 @@ class Household:
 		self.ConsumptionYearly		= profilegentools.gaussMinMax(3500,500) #kWh
 		
 		#According to http://www.energie-nederland.nl/wp-content/uploads/2013/04/EnergieTrends2014.pdf, this is the distribution for devices we are interested in:					
-		self.ConsumptionShare = {	"Electronics"	: profilegentools.gaussMinMax(21,3), \
-									"Lighting"		: profilegentools.gaussMinMax(4,2), \
-									"Standby"		: profilegentools.gaussMinMax(25,6) }
+		self.ConsumptionShare = {	"Electronics"	: profilegentools.gaussMinMax(17,3), \
+									"Lighting"		: profilegentools.gaussMinMax(6,2), \
+									"Standby"		: profilegentools.gaussMinMax(35,6) }
 
 
 		self.Persons = []
