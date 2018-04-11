@@ -1,7 +1,6 @@
-#!/usr/bin/python3
-	
-	#Artifical load profile generator v1.0, generation of artificial load profiles to benchmark demand side management approaches
-    #Copyright (C) 2016 Gerwin Hoogsteen
+
+	#Artifical load profile generator v1.2, generation of artificial load profiles to benchmark demand side management approaches
+    #Copyright (C) 2018 Gerwin Hoogsteen
 
     #This program is free software: you can redistribute it and/or modify
     #it under the terms of the GNU General Public License as published by
@@ -15,17 +14,16 @@
 
     #You should have received a copy of the GNU General Public License
     #along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
     
 
-
-import random, math
-
+from configLoader import *
+config = importlib.import_module(cfgFile)
 import profilegentools
-import config
 
 class Person:		
 	def __init__(self, age):
-		generate(age)
+		self.generate(age)
 		
 	def generate(self, age):	
 		#Variates could also use a gauss distribution, some persons are more predictable than others ;)
@@ -39,8 +37,8 @@ class Person:
 		self.WorkdayArrival_Variate			= 15
 		self.WorkdaySport_Avg				= self.WorkdayArrival_Avg + profilegentools.gaussMinMax(2.5*60, 2*60)
 		self.WorkdaySport_Variate			= 15
-		self.WorkdaySportDuration_Avg			= profilegentools.gaussMinMax(1.5*60, 30)
-		self.WorkdaySportDuration_Variate 		= 10
+		self.WorkdaySportDuration_Avg		= profilegentools.gaussMinMax(1.5*60, 30)
+		self.WorkdaySportDuration_Variate 	= 10
 		self.WorkdayBedTime_Avg				= self.WorkdayWakeUp_Avg + profilegentools.gaussMinMax(15.5*60,30) 
 		self.WorkdayBedTime_Variate			= 15
 		self.WorkdayActivities 				= random.randint(config.personWeekdayActivityChanceMin, config.personWeekdayActivityChanceMax) / 100 #Chance to conduct random activities			
@@ -49,12 +47,12 @@ class Person:
 		self.WeekendWakeUp_Variate 			= 20
 		self.WeekendSport_Avg				= profilegentools.gaussMinMax(14*60, 5*60)
 		self.WeekendSport_Variate			= 60
-		self.WeekendSportDuration_Avg			= profilegentools.gaussMinMax(1.5*60, 30)
-		self.WeekendSportDuration_Variate 		= 30
+		self.WeekendSportDuration_Avg		= profilegentools.gaussMinMax(1.5*60, 30)
+		self.WeekendSportDuration_Variate 	= 30
 		self.WeekendBedTime_Avg				= profilegentools.gaussMinMax(23*60, 30) 
 		self.WeekendBedTime_Variate			= 10
 		self.WeekendActivities				= random.randint(config.personWeekendActivityChanceMin, config.personWeekendActivityChanceMax) / 100
-		
+
 		#For a new deepcopy, the following values should be regenerated
 		self.WorkdaySportday = 1 + random.randint(1,5)
 		self.WeekendSportday = 6*random.randint(0,1)
@@ -64,17 +62,64 @@ class Person:
 		
 		self.CookingTime = self.WorkdayArrival_Avg + 30
 
+		self.showerMorning = True
+		self.showerDays = list(range(0, 7))
+		self.showerDuration = profilegentools.gaussMinMax(8, 3)
 
+		# Generate Heat parameters
+		self.generateHeatParams()
 
 
 		
-	def generateActivity(self):
-		self.WorkdaySportday = 1 + random.randint(1,5)
-		self.WeekendSportday = 6 + randon.randint(0,1)
+	# def generateActivity(self):
+	# 	self.WorkdaySportday = 1 + random.randint(1,5)
+	# 	self.WeekendSportday = 6 + random.randint(0,1)
 
 	def generateWorkdays(self, days):
 		self.Workdays = random.sample(range(1, 6), days)
-		
+
+	def generateHeatParams(self):
+		# Thermostat setpoint preference
+		if self.Age > 80:
+			self.thermostatSetpoint = random.randint(int(21*2), int(24*2)) / 2.0
+		elif self.Age > 75:
+			self.thermostatSetpoint = random.randint(int(20.5*2), int(23*2)) / 2.0
+		elif self.Age > 65:
+			self.thermostatSetpoint = random.randint(int(20*2), int(22.5*2)) / 2.0
+		elif self.Age > 50:
+			self.thermostatSetpoint = random.randint(int(19*2), int(21.5*2)) / 2.0
+		else:
+			self.thermostatSetpoint = random.randint(int(18.5*2), int(20.5*2)) / 2.0
+
+		# Heat production by person, see ASHRAE chapter 18
+		self.heatGeneration = 120 # int(130*(92.5)) #Watts. Note that we lack male/female differnce
+		if self.Age < 15:
+			self.heatGeneration = 97 # 75% of adule male for children
+
+		# Showering schedule
+		# More info: E.J.M. Blokker, "Stochastic water demand modelling for a better understanding of hydraulics in water distribution networks". PhD Thesis TU Delft, 2010
+		numOfShowerDays = random.randint(4, 6)
+		if self.Age > 40:
+			numOfShowerDays -= max(3, random.randint(1, 2)) #Minum of 3x per week
+		else:
+			numOfShowerDays += random.randint(0, 1) # Younger people shower a bit more often
+		# Now select the days
+		self.showerDays = random.sample(self.showerDays, numOfShowerDays)
+
+		# Preferred shower time:
+		# 65% showers in the morning:
+		self.showerMorning = True
+		r = random.randint(0, 100)
+		if r >= 65:
+			self.showerMorning = False
+
+		# Shower time, avg = 8 minutes
+		if self.Age >= 10 and self.Age <= 20:
+			# Teens shower (much) longer:
+			self.showerDuration += random.randint(5, 10)
+
+
+
 	def setActivities(self, workday, weekend):
 		self.WorkdayActivities 				= workday
 		self.WeekendActivities				= weekend
@@ -146,7 +191,6 @@ class Person:
 			eventList.append(self.WorkdayActivityEnd)
 		elif (random.random() < self.WeekendActivities):
 			duration = random.randint(90,8*60)
-			startOffset = profilegentools.gaussMinMax(9*60, 1*60)
 			if duration > 6*60:
 				#all-day event
 				if random.randint(0,1) == 0: #Note: For retired people we might need to add a restriction here

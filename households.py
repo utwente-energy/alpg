@@ -1,7 +1,6 @@
-#!/usr/bin/python3
-	
-	#Artifical load profile generator v1.0, generation of artificial load profiles to benchmark demand side management approaches
-    #Copyright (C) 2016 Gerwin Hoogsteen
+
+	#Artifical load profile generator v1.2, generation of artificial load profiles to benchmark demand side management approaches
+    #Copyright (C) 2018 Gerwin Hoogsteen
 
     #This program is free software: you can redistribute it and/or modify
     #it under the terms of the GNU General Public License as published by
@@ -15,19 +14,22 @@
 
     #You should have received a copy of the GNU General Public License
     #along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
     
 
+from configLoader import *
+config = importlib.import_module(cfgFile)
 
-import random, math, copy, datetime
-
+import math, copy
 import profilegentools
-import config
 import persons
 import devices
-		
+import heatdemand
+
+
 class Household:
 	#Note to self, must simulate whole household at once!
-	
+
 	#Statistics can be found here:
 	#http://www.nibud.nl/uitgaven/huishouden/gas-elektriciteit-en-water.html
 	#http://www.energie-nederland.nl/wp-content/uploads/2013/04/EnergieTrends2014.pdf
@@ -62,6 +64,22 @@ class Household:
 									"Electronics"	: [], \
 									"Lighting"		: [], \
 									"Standby"		: [] }
+
+		self.HeatGain = {			"PersonGain"	: [], \
+									"DeviceGain"	: [], \
+									"SolarGain"		: [], \
+									"VentFlow"		: [], \
+									"Total"			: []}
+
+		self.HeatDemand = {			"DHWDemand"		: [], \
+									"Total"			: []}
+
+		# Heat gain factors from devices
+		self.HeatGainShare = {		"Other"			: 0.3, \
+							   		"Fridges"		: 0.5, \
+									"Electronics"	: 1.0, \
+									"Lighting"		: 0.8, \
+									"Standby"		: 1.0 }
 		
 		self.ReactiveConsumption = {"Total"			: [], \
 									"Other"			: [], \
@@ -86,7 +104,10 @@ class Household:
 		
 		self.hasDishwasher = False
 		self.hasInductionCooking = random.randint(1,10)<4
-		self.hasEV= False
+		self.hasEV = False
+		self.hasHP = False
+		self.hasCHP = False
+		self.hasFloorHeating = True
 		
 		self.numOfWashes = 0		#weekly
 		self.numOfDishwashes = 0 	#Weekly
@@ -109,6 +130,11 @@ class Household:
 							"DishwashMachine": devices.DeviceDishwasher(),\
 							"ElectricalVehicle": devices.DeviceElectricalVehicle(),\
 							"PVPanel" : devices.DeviceSolarPanel()}
+
+		self.HeatingDevices = {	"PersonGain": heatdemand.PersonGain(), \
+								"Thermostat": heatdemand.Thermostat(), \
+								"VentFlow": heatdemand.Ventilation(), \
+								"DHWDemand": heatdemand.DHWDemand() }
 		
 		self.familyActivites = random.randint(config.familyOutingChanceMin, config.familyOutingChanceMax) / 100
 	
@@ -165,8 +191,20 @@ class Household:
 			
 			self.ReactiveConsumption[k] = [round(x) for x in self.ReactiveConsumption[k]]			
 			self.ReactiveConsumption['Total'] = [sum(x) for x in zip(self.ReactiveConsumption['Total'], self.ReactiveConsumption[k])]
-		
-		
+
+	def thermalGainProfile(self):
+		self.HeatGain['Total'] = list(self.HeatGain["PersonGain"])
+		# self.HeatGain['Total'] =  [sum(x) for x in zip(self.HeatGain['Total'], self.HeatGain['SolarGain'])]
+
+		self.HeatGain['DeviceGain'] = [0] * len(self.HeatGain["PersonGain"])
+
+		for k, v, in self.HeatGainShare.items():
+			gain = [round(x * v) for x in self.Consumption[k]]
+			self.HeatGain['DeviceGain'] = [sum(x) for x in zip(self.HeatGain['DeviceGain'], gain)]
+
+		self.HeatGain['Total'] =  [sum(x) for x in zip(self.HeatGain['Total'], self.HeatGain['DeviceGain'])]
+
+
 	def generateWashingdays(self, days):
 		self.WashingDays = random.sample(range(0, 7), days)
 		for i in range(0,7):
@@ -251,7 +289,8 @@ class Household:
 					self.OccupancyAdultsDay[t] = 0
 					for p in range(0, len(self.Persons)):
 						self.OccupancyPerson[p][t] = 0
-						
+
+
 			#Select cooking time
 			cookingTime = random.randint(17*60,19.5*60)
 			startCooking = cookingTime;
@@ -272,15 +311,25 @@ class Household:
 			OtherProfile = [0] * 1440
 			InductiveProfile = [0] * 1440
 			StandbyProfile = [1] * 1440 # Standby is fixed load, but will be scaled!
-			
-			#Simulate individual devices
-			LightingProfile = self.Devices["Lighting"].simulate(1440, self.OccupancyPersonsDay, 1388534400+(3600*24*day))		
-			ElectronicsProfile = self.Devices["Electronics"].simulate(1440, self.OccupancyPersonsDay, self.OccupancyPerson)		
-			InductiveProfile = self.Devices["Ventilation"].simulate(1440, self.OccupancyPersonsDay)
-			
+
+			# Simualate Heating devices and gains
+			# Person gain
+			HeatPersonGain = self.HeatingDevices["PersonGain"].simulate(1440, self.Persons, self.OccupancyPerson)
+
+			# Device heat gain is done through rescaling
+			# Thermostat
+			self.HeatingDevices["Thermostat"].simulate(1440, day, self.Persons, self.OccupancyPersonsDay)
+
+			# Initialize the ventilation profile
+			self.HeatingDevices["VentFlow"].simulate(1440, self.OccupancyPersonsDay)
+
+			# FIXME Add DHW simulation here
+			# persons, occupancyPerson, dayOfWeek, cookingTime = None, cookingDuration = None, hasDishwasher = None):
+			DHWDemandProfile = self.HeatingDevices["DHWDemand"].simulate(self.Persons, self.OccupancyPerson, dayOfWeek, cookingTime, cookingDuration, self.hasDishwasher)
+
 			#Kitchen
 			if startCooking != -1:
-				OtherProfile = self.Devices["Cooking"].simulate(1440, self.OccupancyAdultsDay, self.Persons, startCooking, cookingDuration, self.hasInductionCooking)
+				OtherProfile = self.Devices["Cooking"].simulate(1440, self.OccupancyAdultsDay, self.Persons, startCooking, cookingDuration, self.hasInductionCooking, self.HeatingDevices["VentFlow"])
 			OtherProfile = [sum(x) for x in zip(OtherProfile, self.Devices['Kettle'].simulate(1440, self.OccupancyPersonsDay))]
 
 			FridgeProfile = [0] * 1440
@@ -313,21 +362,36 @@ class Household:
 					if (((dayOfWeek in self.DishwashDays) and (random.random()  < 0.9)) or (random.random()  < 0.1)):
 						self.Devices["DishwashMachine"].simulate(1440, day, self.OccupancyAdultsDay, self.DishwashMoment[dayOfWeek])
 
+			#Simulate individual devices
+			LightingProfile = self.Devices["Lighting"].simulate(1440, self.OccupancyPersonsDay, 1388534400+(3600*24*day))
+			ElectronicsProfile = self.Devices["Electronics"].simulate(1440, self.OccupancyPersonsDay, self.OccupancyPerson)
+			InductiveProfile = self.Devices["Ventilation"].simulate(1440, self.HeatingDevices["VentFlow"])
+
+
+			# Bookkeeping
 			self.consumptionFactor['Electronics'].extend(ElectronicsProfile)
 			self.consumptionFactor['Lighting'].extend(LightingProfile)
 			self.consumptionFactor['Standby'].extend(StandbyProfile)
 			self.consumptionFactor['Other'].extend(OtherProfile)
 			self.consumptionFactor['Inductive'].extend(InductiveProfile)
 			self.consumptionFactor['Fridges'].extend(FridgeProfile)
-			
+
+			# Extend the heating vectors
+			self.HeatGain['PersonGain'].extend(HeatPersonGain)
+			self.HeatGain['VentFlow'].extend(self.HeatingDevices["VentFlow"].VentilationProfile)
+
+			self.HeatDemand['DHWDemand'].extend(DHWDemandProfile)
+			self.HeatDemand['Total'].extend(DHWDemandProfile)
+
 			self.Occupancy.extend(self.OccupancyPersonsDay)
+
 
 		#Now simulate the PV Profile
 		if self.House.hasPV:
 			#simulate(startday, timeintervals, pvArea, pvEfficiency, pvAzimuth, pvElevation)
-			self.PVProfile = self.Devices['PVPanel'].simulate(config.startDay, config.numDays*((3600*24)/config.timeBase), self.House.pvArea, self.House.pvEfficiency, self.House.pvAzimuth, self.House.pvElevation)
+			self.PVProfile = self.Devices['PVPanel'].simulate(config.startDay, config.numDays*((3600*24)/60), self.House.pvArea, self.House.pvEfficiency, self.House.pvAzimuth, self.House.pvElevation)
 		else:
-			self.PVProfile = [0] * config.numDays * int(24*3600/config.timeBase)
+			self.PVProfile = [0] * config.numDays * int(24*3600/60)
 
 
 	def saveToFile(self, num):

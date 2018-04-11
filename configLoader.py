@@ -16,30 +16,22 @@
     #along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import sys, getopt, importlib, random
 
-from configLoader import *
-config = importlib.import_module(cfgFile)
+# Default write into a new folder
+folder = 'output/output/'
 
-import profilegentools
-		
-class House:
-	#In the end we need to define houses as well with their orientation
-	def __init__(self):
-		self.hasPV = False
-		self.hasBattery = False
-				
-	def addPV(self, area):
-		self.hasPV = True
-		self.pvArea = area
-		self.pvEfficiency = random.randint(config.PVEfficiencyMin, config.PVEfficiencyMax)
-		self.pvAzimuth = profilegentools.gaussMinMax(config.PVAzimuthMean, config.PVAzimuthSigma)
-		if(self.pvAzimuth < 0):
-			self.pvAzimuth = self.pvAzimuth + 360
-		self.pvElevation = profilegentools.gaussMinMax(config.PVAngleMean, config.PVAngleSigma)
-			
-	def addBattery(self, capacity, power):
-		if capacity > 0:
-			self.hasBattery = True
-			self.batteryCapacity = capacity
-			self.batteryPower = power
-			
+cfgOutputDir = 'output/output/'
+outputFolder = cfgOutputDir
+cfgFile = None
+
+#Parse arguments
+opts, args = getopt.getopt(sys.argv[1:],"c:o:f",["config=","output=", "force"])
+for opt, arg in opts:
+	if opt in ("-c", "--config"):
+		cfgFile = arg
+	elif opt in ("-o", "--output"):
+		cfgOutputDir = 'output/'+arg+'/'
+
+outputFolder = cfgOutputDir		
+sys.path.insert(0, 'configs')

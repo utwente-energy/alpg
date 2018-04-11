@@ -1,7 +1,6 @@
-#!/usr/bin/python3
-	
-	#Artifical load profile generator v1.0, generation of artificial load profiles to benchmark demand side management approaches
-    #Copyright (C) 2016 Gerwin Hoogsteen
+
+	#Artifical load profile generator v1.2, generation of artificial load profiles to benchmark demand side management approaches
+    #Copyright (C) 2018 Gerwin Hoogsteen
 
     #This program is free software: you can redistribute it and/or modify
     #it under the terms of the GNU General Public License as published by
@@ -15,31 +14,32 @@
 
     #You should have received a copy of the GNU General Public License
     #along with this program.  If not, see <http://www.gnu.org/licenses/>.
-    
 
 
-import random, math, copy, datetime, os
 
+from configLoader import *
+config = importlib.import_module(cfgFile)
+
+import os
 import profilegentools
-import config
 
 def writeCsvLine(fname, hnum, line):
-	if not os.path.exists(config.folder+'/'+fname): 
+	if not os.path.exists(outputFolder+'/'+fname): 
 		#overwrite
-		f = open(config.folder+'/'+fname, 'w')
+		f = open(outputFolder+'/'+fname, 'w')
 	else:
 		#append
-		f = open(config.folder+'/'+fname, 'a')
+		f = open(outputFolder+'/'+fname, 'a')
 	f.write(line + '\n')
 	f.close()
 	
 def writeCsvRow(fname, hnum, data):
 	if hnum == 0:
-		with open(config.folder+'/'+fname, 'w') as f:
+		with open(outputFolder+'/'+fname, 'w') as f:
 			for l in range(0, len(data)):
 				f.write(str(round(data[l])) + '\n')
 	else:
-		with open(config.folder+'/'+fname, 'r+') as f:
+		with open(outputFolder+'/'+fname, 'r+') as f:
 			lines = f.readlines()
 			f.seek(0)
 			f.truncate()
@@ -52,29 +52,11 @@ def writeCsvRow(fname, hnum, data):
 
 def writeNeighbourhood(num):
 	pass
-	#Write specific neighbourhood data if required, see the Triana example:
-	#configFile = []
-	#configFile.append('\tif houseNum == '+str(num)+':')
-	#configFile.append('\t\timport out.House'+str(num))
-	#configFile.append('\t\tout.House'+str(num)+'.addHouse(node, coordx, coordy, phase, houseNum, control, masterController, cfg)')
-
-	#if num == 0: 
-		##overwrite
-		#f = open(config.folder+'/neighbourhood.py', 'w')
-	#else:
-		##append
-		#f = open(config.folder+'/neighbourhood.py', 'a')
-	#for line in range(0, len(configFile)):
-		#f.write(configFile[line] + '\n')
-	#f.close()
-
-
-
 
 def writeHousehold(house, num):
 	#Save the profile:
 	writeCsvRow('Electricity_Profile.csv', num, house.Consumption['Total'])
-	writeCsvRow('Electricity_Profile_Groupother.csv', num, house.Consumption['Other'])
+	writeCsvRow('Electricity_Profile_GroupOther.csv', num, house.Consumption['Other'])
 	writeCsvRow('Electricity_Profile_GroupInductive.csv', num, house.Consumption['Inductive'])
 	writeCsvRow('Electricity_Profile_GroupFridges.csv', num, house.Consumption['Fridges'])
 	writeCsvRow('Electricity_Profile_GroupElectronics.csv', num, house.Consumption['Electronics'])
@@ -82,16 +64,36 @@ def writeHousehold(house, num):
 	writeCsvRow('Electricity_Profile_GroupStandby.csv', num, house.Consumption['Standby'])
 	
 	writeCsvRow('Reactive_Electricity_Profile.csv', num, house.ReactiveConsumption['Total'])
-	writeCsvRow('Reactive_Electricity_Profile_Groupother.csv', num, house.ReactiveConsumption['Other'])
+	writeCsvRow('Reactive_Electricity_Profile_GroupOther.csv', num, house.ReactiveConsumption['Other'])
 	writeCsvRow('Reactive_Electricity_Profile_GroupInductive.csv', num, house.ReactiveConsumption['Inductive'])
 	writeCsvRow('Reactive_Electricity_Profile_GroupFridges.csv', num, house.ReactiveConsumption['Fridges'])
 	writeCsvRow('Reactive_Electricity_Profile_GroupElectronics.csv', num, house.ReactiveConsumption['Electronics'])
 	writeCsvRow('Reactive_Electricity_Profile_GroupLighting.csv', num, house.ReactiveConsumption['Lighting'])
 	writeCsvRow('Reactive_Electricity_Profile_GroupStandby.csv', num, house.ReactiveConsumption['Standby'])
-	
+
+	# Save HeatGain profiles
+	writeCsvRow('Heatgain_Profile.csv', num, house.HeatGain['Total'])
+	writeCsvRow('Heatgain_Profile_Persons.csv', num, house.HeatGain['PersonGain'])
+	writeCsvRow('Heatgain_Profile_Devices.csv', num, house.HeatGain['DeviceGain'])
+
+	# Safe TapWater profiles
+	writeCsvRow('Heatdemand_Profile.csv', num, house.HeatDemand['Total'])
+	writeCsvRow('Heatdemand_Profile_DHWTap.csv', num, house.HeatDemand['DHWDemand'])
+
+	# Airflow, kind of hacky
+	writeCsvRow('Airflow_Profile_Ventilation.csv', num, house.HeatGain['VentFlow'])
+
+	# writeCsvRow('Heatgain_Profile_Solar.csv', num, house.HeatGain['SolarGain'])
+
+	# FIXME Add DHW Profile
+
 	#Write all devices:
 	for k, v, in house.Devices.items():
 		house.Devices[k].writeDevice(num)
+
+	#Write all heatdevices:
+	for k, v, in house.HeatingDevices.items():
+		house.HeatingDevices[k].writeDevice(num)
 	
 	#House specific devices	
 	if house.House.hasPV:
@@ -104,8 +106,18 @@ def writeHousehold(house, num):
 	if house.House.hasBattery:
 		text = str(num)+':'
 		text += str(house.House.batteryPower)+','+str(house.House.batteryCapacity)+','+str(round(house.House.batteryCapacity/2))
-		writeCsvLine('BatterySettings.txt', num, text)	
+		writeCsvLine('BatterySettings.txt', num, text)
 
+	# Write what type of heating device is used
+	if house.hasHP:
+		text = str(num)+':HP'			# Heat pump
+		writeCsvLine('HeatingSettings.txt', num, text)
+	elif house.hasHP:
+		text = str(num)+':CHP'			# Combined Heat Power
+		writeCsvLine('HeatingSettings.txt', num, text)
+	else:
+		text = str(num)+':CONVENTIONAL'	# Conventional heating device, e.g. natural gas boiler
+		writeCsvLine('HeatingSettings.txt', num, text)
 	
 def writeDeviceBufferTimeshiftable(machine, hnum):
 	if machine.BufferCapacity > 0 and len(machine.StartTimes) > 0:
@@ -153,3 +165,12 @@ def writeDeviceTimeshiftable(machine, hnum):
 		text = str(hnum)+':'
 		text += machine.LongProfile
 		writeCsvLine('Dishwasher_Profile.txt', hnum, text)
+
+def writeDeviceThermostat(machine, hnum):
+	text = str(hnum)+':'
+	text += profilegentools.createStringList(machine.StartTimes, None, 60)
+	writeCsvLine('Thermostat_Starttimes.txt', hnum, text)
+
+	text = str(hnum)+':'
+	text += profilegentools.createStringList(machine.Setpoints)
+	writeCsvLine('Thermostat_Setpoints.txt', hnum, text)

@@ -1,7 +1,7 @@
 #!/usr/bin/python3    
 
-	#Artifical load profile generator v1.0, generation of artificial load profiles to benchmark demand side management approaches
-    #Copyright (C) 2016 Gerwin Hoogsteen
+	#Artifical load profile generator v1.1, generation of artificial load profiles to benchmark demand side management approaches
+    #Copyright (C) 2018 Gerwin Hoogsteen
 
     #This program is free software: you can redistribute it and/or modify
     #it under the terms of the GNU General Public License as published by
@@ -21,46 +21,33 @@
     
 #This is an example configuration file!
 
-import random, csv, io, os, numpy, datetime, math
-
-#For this dependency: run "sudo pip install astral"
-from astral import Astral
-
-import profilegentools
-
-## Please select your output writer of preference
+# Select the output writer
 import writer as writer
-#import trianawriter as writer
 
 #Random seed
-seed = 42;
-random.seed(seed)
-
-#In- and out files:
-#Folder to write the output to
-folder = 'out'
+seed = 42
 
 #input files:
-weather_irradiation = 'solarirradiation.csv'
+weather_irradiation = 'input/weather/solarirradiation_twenthe.csv'
 weather_timebaseDataset = 3600 #in seconds per interval
 
 
 #Simulation:
-
-
-
 #number of days to simulate and skipping of initial days. Simulation starts at Sunday January 1.
 numDays = 365			# number of days
 startDay = 0			# Initial day
 
 
 #Select the geographic location. Refer to the Astral plugin to see available locations (or give a lon+lat)
-city_name = 'Amsterdam' 
-a = Astral()
-a.solar_depression = 'civil'
-city = a[city_name]
+# Use e.g. https://www.latlong.net/
+from astral import Location
 
-
+location = Location()
+location.solar_depression = 'civil'
+location.latitude = 52.239095
+location.longitude = 6.857018
+location.timezone = 'Europe/Amsterdam'
+location.elevation = 0
 
 #Select the devices in the neighbourhood
 
@@ -68,13 +55,27 @@ city = a[city_name]
 #Scale overall consumption:
 consumptionFactor = 1.0 #consumption was a bit too high
 
-#Penetration of emerging technology in percentages
-#all values must be between 0-100
+# Penetration of emerging technology in percentages
+# all values must be between 0-100
+# These indicate what percentage of the houses has a certain device
+
+# Electric mobility, restriction that the sum <= 100
+# Note, households with larger driving distances will receive EVs first
 penetrationEV 				= 13
-penetrationPHEV 			= 32 
+penetrationPHEV 			= 32
+
+# PV and storage, restriction that Battery <= PV
+# Note PV and battery size depend on the annual household consumption 
+# This emulates the Dutch "nul-op-the-meter regime (net zero annual electricity usage)
 penetrationPV				= 50
 penetrationBattery 			= 10	#Note only houses with PV will receive a battery! 
+
+# Heating systems, with restriction that the sum <= 100
+penetrationHeatPump 		= 25
+penetrationCHP				= 5		# Combined heat and power
+
 penetrationInductioncooking = 25
+
 
 #Device parameters:
 #EV
@@ -84,10 +85,11 @@ capacityPHEV = 	12000	#Wh
 powerPHEV = 	3700	#W
 
 #PV
-PVProductionPerYear = 	220		#kWh
-PVAngleMean = 			35 		#degrees
+PVProductionPerYear = 	220		#average kWh per m2 solar panel on annual basis
+PVAngleMean = 			35 		#degrees, 0 is horizontal to earth surface
 PVAngleSigma = 			10		#degrees
-PVSouthAzimuthSigma = 	90 		#degrees
+PVAzimuthMean = 		180 	#degrees, 0 is north, 90 is east
+PVAzimuthSigma = 		90 		#degrees
 PVEfficiencyMin = 		15		#% of theoretical max
 PVEfficiencyMax = 		20		#% of theoretical max
 
@@ -138,26 +140,24 @@ personWeekendActivityChanceMax = 	30 	#percentage
 
 
 
-
+householdList = []
 
 #Select the types of households
 import households
 
-householdList = []
-
-for i in range(0,22):
+for i in range(0,2):
 	householdList.append(households.HouseholdSingleWorker())
 	
-for i in range(0,22):
+for i in range(0,20):
 	householdList.append(households.HouseholdSingleRetired())
 	
-for i in range(0,11):
+for i in range(0,6):
 	householdList.append(households.HouseholdDualWorker(True))
 	
-for i in range(0,11):
+for i in range(0,6):
 	householdList.append(households.HouseholdDualWorker(False))
 	
-for i in range(0,22):
+for i in range(0,16):
 	householdList.append(households.HouseholdDualRetired())	
 	
 for i in range(0,20):
@@ -165,38 +165,3 @@ for i in range(0,20):
 	
 for i in range(0,10):
 	householdList.append(households.HouseholdFamilyDualWorker(False))
-	
-for i in range(0,3):
-	householdList.append(households.HouseholdFamilySingleWorker(True))
-
-numHouses = len(householdList)
-
-
-
-
-
-
-
-
-
-
-
-
-### DO NOT EDIT BEYOND THIS LINE ###
-#WARNING: The following option is untested:
-#Output timebase in seconds 
-timeBase = 60 			#must be a multiple of 60
-
-#Do no touch this:
-intervalLength = int(timeBase/60) #set the rate in minutes, normal in minute intervals
-
-
-#TRIANA SPECIFIC SETTINGS
-#Control
-#TODO MAKE USE OF IT
-TrianaPlanning_LocalFlat 			= True
-TrianaPlanning_ReplanningInterval 	= 96	
-TrianaPlanning_Horizon 				= 192
-TrianaPlanning_MaximumIterations 	= 5
-TrianaPlanning_MinImprovenemt 		= 10 
-trianaModelPath = 'models/newr/'

@@ -1,7 +1,6 @@
-#!/usr/bin/python3
-	
-	#Artifical load profile generator v1.0, generation of artificial load profiles to benchmark demand side management approaches
-    #Copyright (C) 2016 Gerwin Hoogsteen
+
+	#Artifical load profile generator v1.2, generation of artificial load profiles to benchmark demand side management approaches
+    #Copyright (C) 2018 Gerwin Hoogsteen
 
     #This program is free software: you can redistribute it and/or modify
     #it under the terms of the GNU General Public License as published by
@@ -15,13 +14,13 @@
 
     #You should have received a copy of the GNU General Public License
     #along with this program.  If not, see <http://www.gnu.org/licenses/>.
-    
 
 
-import random, math, datetime
-
+from configLoader import *
+config = importlib.import_module(cfgFile)
+import math, datetime
 import profilegentools
-import config
+import linecache
 
 class Device:
 	def __init__(self, consumption = 0):
@@ -32,10 +31,8 @@ class Device:
 		self.Consumption = consumption
 		
 	def writeDevice(self, hnum):
-		if False == True:
-			print("This writer should be overwritten")
-		
-		
+		pass
+
 class TimeShiftableDevice(Device):
 	def __init__(self, consumption = 0):
 		self.generate(consumption)
@@ -132,7 +129,7 @@ class DeviceKettle(Device):
 	
 class DeviceLighting(Device):
 	def simulate(self, timeintervals, occupancy, timestamp):
-		sun = config.city.sun(date=datetime.date.fromtimestamp(timestamp), local=True)
+		sun = config.location.sun(date=datetime.date.fromtimestamp(timestamp), local=True)
 		LightingOnProfile = [1] * 1440
 		LightingProfile = [0] * 1440
 		for m in range((sun['sunrise'].hour*60+sun['sunrise'].minute)+random.randint(-10,40), \
@@ -172,7 +169,7 @@ class DeviceElectronics(Device):
 
 
 class DeviceCooking(Device):
-	def simulate(self, timeintervals, occupancy, persons, startCooking, cookingDuration, hasInductionCooking):
+	def simulate(self, timeintervals, occupancy, persons, startCooking, cookingDuration, hasInductionCooking, ventilation):
 		CookingProfile = [0] * 1440
 		cookingDuration = random.randint(20,40)
 		
@@ -191,7 +188,9 @@ class DeviceCooking(Device):
 					
 			cookingDuration = random.randint(35,45)
 			for m in range(startCooking, startCooking+cookingDuration):
-				CookingProfile[m] += config.ConsumptionStoveVentilation
+				ventilation.VentilationProfile[m] += ventilation.CookingAirFlow
+				ventilation.VentilationProfile[m] = min(ventilation.VentilationProfile[m], ventilation.MaxAirflow)
+				# CookingProfile[m] += config.ConsumptionStoveVentilation
 				
 			if(hasInductionCooking):
 				inductionRatio = random.randint(3,6)
@@ -227,7 +226,9 @@ class DeviceCooking(Device):
 		#Stove
 			cookingDuration = random.randint(35,45)
 			for m in range(startCooking, startCooking+cookingDuration):
-				CookingProfile[m] += config.ConsumptionStoveVentilation
+				ventilation.VentilationProfile[m] += ventilation.CookingAirFlow
+				ventilation.VentilationProfile[m] = min(ventilation.VentilationProfile[m], ventilation.MaxAirflow)
+				# CookingProfile[m] += config.ConsumptionStoveVentilation
 			
 			if random.random()<0.3:
 				cookingDuration = random.randint(4,6)
@@ -257,13 +258,15 @@ class DeviceCooking(Device):
 
 
 class DeviceVentilation(Device):
-	def simulate(self, timeintervals, occupancy):
-		VentilationProfile = [0] * 1440
-		for m in range(0, 1440):
-			if occupancy[m] > 0:
-				VentilationProfile[m] = self.Consumption
+	# Determine the power consumption of the ventilationsystem baased on the requested air ventilation. NOTE using pointers here
+	def simulate(self, timeintervals, ventilation):
+		VentilationProfile = []
+		for i in range(0, len(ventilation.VentilationProfile)):
+			VentilationProfile.append(int((ventilation.VentilationProfile[i]/ventilation.MaxAirflow) * self.Consumption))
+
 		return VentilationProfile
-	
+
+
 class DeviceIroning(Device):
 	def simulate(self, timeintervals, occupancy, numPersons):
 		IroningProfile = [0] * 1440
@@ -296,117 +299,118 @@ class DeviceVacuumcleaner(Device):
 				startVacuum = random.randint(10*60, 17*60)
 			else:
 				startVacuum = random.randint(20*60, 22*60)
-		if count != 40:
+		if count != 50:
 			for m in range(startVacuum, startVacuum+vacuumDuration):
 				VacuumProfile[m] += self.Consumption
 		return VacuumProfile
 	
 	
 class DeviceSolarPanel(Device):	
-	def calculateProduction(self, time, irradiation):
-		if(irradiation < 0.01):
-			return 0.0
-		
-		longitudeRadian = self.longitude*(math.pi/180)	#Location specific
-		latitudeRadian = self.latitude*(math.pi/180)	#Location specific
-		elevationRadian = self.elevation*(math.pi/180)	#Angle of the panel
-		azimuthRadian = self.azimuth*(math.pi/180)		#in degrees: 0 is facing south, 90 is facing west, 180 is facing north and 270 east.
-		rho_gnd = 0.2 #a constant for now
-		
-		#Sun position calculations:
-		#Source: Renewable Energy: Technology, economics and Environment
-		#Available: https:#books.google.nl/books?id=I4g0mlQI7HcC&pg=PA36&lpg=PA36#v=onepage&q&f=false
-		#Page 36 and onwards
-		
-		day = int(math.floor(time / (60*60*24)))
-		delta = (-23.45*math.cos(2*math.pi*((day+10)/365.25)))*(math.pi/180)
-		N = 2*math.pi*((day-1)/365); #one year
-		E_time = 229.2 * (0.000075 + 0.001868*math.cos(N) - 0.032077*math.sin(N) - 0.014615*math.cos(2*N) - 0.04089*math.sin(2*N) )
-
-		local_std_time = int(((time / 60)%(24*60)))
-		solar_time = local_std_time + 4 * (0 - longitudeRadian/(math.pi/180)) + E_time; #NOTE: DST screwed up here!
-		omega = (((solar_time/60)*15)-180) * (math.pi/180)
-		h = math.asin(math.cos(latitudeRadian)*math.cos(delta)*math.cos(omega)+math.sin(latitudeRadian)*math.sin(delta))
-		
-		#Calculate diffuse light
-		I_0 = (1367*3600/10000) * math.sin(h)
-		k_T = 0.0
-		if(I_0 >= 0.001):
-			k_T = irradiation / I_0
-
-
-		I_d = irradiation*0.165
-		if(k_T <= 0.0):
-			I_d = 0.0
-		elif(k_T <= 0.22):
-			I_d = irradiation*(1.0-0.09*k_T)
-		elif(k_T <= 0.8):
-			I_d = irradiation*(0.9511-0.1604*k_T+4.388*math.pow(k_T,2)-16.638*math.pow(k_T,3)+12.336*(math.pow(k_T, 4)))
-
-		#Calcualte the direct beam
-		I_b = irradiation-I_d
-		I = min(I_0,I_b / math.sin(h))
-		if(h < 0.001):
-			I = 0.0
-		
-
-		#Obtain the ammount of energy
-		G_ds = I_d*(1+math.cos(elevationRadian))/2
-		G_gnds = irradiation*rho_gnd*(1-math.cos(elevationRadian))/2
-		theta = math.acos(math.sin(delta)*math.sin(latitudeRadian)*math.cos(elevationRadian)-
-					math.sin(delta)*math.cos(latitudeRadian)*math.cos(azimuthRadian)*math.sin(elevationRadian)+
-					math.cos(delta)*math.cos(latitudeRadian)*math.cos(omega)*math.cos(elevationRadian)+
-					math.cos(delta)*math.sin(latitudeRadian)*math.cos(azimuthRadian)*math.cos(omega)*math.sin(elevationRadian)+
-					math.cos(delta)*math.sin(azimuthRadian)*math.sin(omega)*math.sin(elevationRadian))
-		G_bs = max(0.0, I*math.cos(theta))
-		G_ts = G_ds + G_bs + G_gnds #This is the joules in one hour for a square cm
-
-		#Return the W/m2 (coming from J/cm2 for a whole hour)
-		powerSquareMeter = (G_ts * 10000)/config.weather_timebaseDataset
-
-		#and now calculate according to the efficiency of the whole panel. Above is the theoretical max
-		return -powerSquareMeter * self.efficiency/100
-	
-	
-	
 	def simulate(self, startday, timeintervals, pvArea, pvEfficiency, pvAzimuth, pvElevation):
-		#pvProfile = [0] * timeintervals
 		pvProfile = []
-		
-		self.longitude = config.city.longitude
-		self.latitude = config.city.latitude
-		self.efficiency = pvEfficiency
-		self.azimuth = pvAzimuth
-		self.elevation = pvElevation
-		
-		#read input
-		irradiation = []
-		f = open(config.weather_irradiation, 'r')
-		for line in f:
-			irradiation.append(float(line))
-		f.close()
-		
+
 		time = startday*24*60*60
-		while(time < (startday*24*60*60)+timeintervals*config.timeBase):
-			index = int(math.floor(time/config.weather_timebaseDataset))
+		while(time < (startday*24*60*60)+timeintervals*60):
+			modeltime = int(time - (time % config.weather_timebaseDataset) + int(config.weather_timebaseDataset / 2))
+
+			d = datetime.datetime.utcfromtimestamp(1388534400 + modeltime)
+			elevation = config.location.solar_elevation(d)
+			azimuth = config.location.solar_azimuth(d)
+			zenith = config.location.solar_zenith(d)
+
+			index = int(math.floor(modeltime/config.weather_timebaseDataset))
 			index = max(index, 0)
-			irradiationNow = irradiation[index]
+			try:
+				irradiation = float(linecache.getline(config.weather_irradiation, index+1))
+			except:
+				print("An error occurred reading the solar irradiation file. Make sure that the file is correct (e.g. only contains numbers), is long enough (make sure that it has a bit more data than the actual simulation. And, make sure that the file exists!")
+				exit()
 
-			if(index > 0):
-				offset =  time%config.weather_timebaseDataset
-				if(offset < config.weather_timebaseDataset/2):
-					irradiationNow = (0.5 - (offset/config.weather_timebaseDataset)) * irradiation[index-1] + (0.5 + (offset/config.weather_timebaseDataset)) * irradiation[index]
-				else:
-					irradiationNow = (1.5 - (offset/config.weather_timebaseDataset)) * irradiation[index] + (-0.5 + (offset/config.weather_timebaseDataset)) * irradiation[index+1];
-		
-			#calculate
-			pvProfile.append(int(round(self.calculateProduction(time, irradiationNow)*pvArea)))
-		
-			time = time + config.timeBase
-			
+			GHI = ( irradiation * 10000 ) / float(config.weather_timebaseDataset)
+
+			# Calculate diffused light
+
+			# Adapted from:
+			# https://github.com/jgoizueta/solar/blob/master/lib/solar/radiation.rb
+			Gmax = 1367 * math.sin(math.radians(elevation))
+
+			# Determine the clearness index
+			clearnessIndex = 0.0
+			if Gmax > 0.0:
+				clearnessIndex = GHI / Gmax
+
+			# Calculate the diffuse fraction
+			# Depends on clearness index and elevation
+			# Calculated using this method:
+			# 1982 Erbs, Klein, Duffie
+			diffuseFraction = 0.165
+			if clearnessIndex <= 0.0001:
+				diffuseFraction = 0.0
+			elif clearnessIndex <= 0.22:
+				diffuseFraction = (1.0-0.09*clearnessIndex)
+			elif clearnessIndex<= 0.8:
+				diffuseFraction = ( 0.9511-0.1604*clearnessIndex + \
+							   4.388 * math.pow(clearnessIndex, 2) - \
+							   16.638 * math.pow(clearnessIndex, 3) + \
+							   12.336 * (math.pow(clearnessIndex, 4)) )
+
+			# irradiance based on this fraction
+			DHI =  diffuseFraction * GHI # Diffuse Horizontal Irradiance
+
+			# Beam radiation
+			irradiationBeam = GHI - DHI
+
+			# And now calculate DNI based on the elevation of the sun
+			# Using this relation:	GHI = DHI + DNI*cos(solar zenith)
+			if elevation > 1 and math.sin(math.radians(elevation)) > 0.25:
+				DNI = min(1367.0, ( irradiationBeam * 1 / math.sin(math.radians(elevation)) ) )
+				# Avoid gigantic overshoots using the minimum here.
+			elif elevation > 0 and math.sin(math.radians(elevation)) <= 0.2:
+				# Avoiding weir corner case behaviour
+				DNI = min(2*irradiationBeam, ( irradiationBeam * 1 / math.sin(math.radians(elevation)) ) )
+			else:
+				DNI = 0.0
+
+			# Now calculate the energy falling on a plane
+			# Based on the research by Marius Groen at Liandon
+			# Improvement of the Liandon EC Cablepooling Model (Public Version)
+			# Marius Groen
+
+			if GHI < 0.001 or elevation <= 1:
+				pvProfile.append(0)	# No power (significant) irradiation, avoid division by 0.
+			else:
+				# Calculate Incidence Angle (2.3) (theta_i)
+				planeIncidence = math.degrees( math.acos( \
+											math.cos(math.radians(zenith)) * math.cos(math.radians(pvElevation)) + \
+											( math.sin(math.radians(zenith)) * math.sin(math.radians(pvElevation)) * \
+											  math.cos(math.radians(azimuth - pvAzimuth))	) \
+											) )
+
+				# Calculate Gdir (2.2)
+				Gdir = DNI * math.cos(math.radians(planeIncidence))
+
+				# Calculate the diffuse irradiance (Gdfs)
+				# First (2.5)
+				factorF = 1 - math.pow( (DHI / GHI) , 2)
+
+				# Now (2.4)
+				Gdfs = DHI * 	( \
+								( ( 1 + math.cos(math.radians(pvElevation))) / 2.0 ) * \
+								( 1 + factorF * math.pow(math.sin(math.radians(pvElevation / 2.0)), 3) ) * \
+								( 1 + factorF * math.pow(math.cos(math.radians(planeIncidence)), 2) * math.pow(math.sin(math.radians(zenith)), 3) ) \
+								)
+
+				# Ground reflected Irradiance Gref ( 2.6)
+				Gref = GHI * 0.2 * ( (1 - math.cos(math.radians(pvElevation))) / 2.0 )
+
+				# Now according to 2.1 we can add these and return out results
+				total = max(0.0, Gdir + Gdfs + Gref)
+
+				pvProfile.append(-1 * total * (pvEfficiency/100.0) * pvArea)
+			# Increment time
+			time = time + 60
+
 		return pvProfile
-		
-
 		
 	
 class DeviceWashingMachine(TimeShiftableDevice):
@@ -449,7 +453,6 @@ class DeviceWashingMachine(TimeShiftableDevice):
 			
 	def generate(self, consumption = 0):
 		self.LongProfile = 'complex(66.229735, 77.4311402954),complex(119.35574, 409.21968),complex(162.44595, 516.545199388),complex(154.744551, 510.671236335),complex(177.089979, 584.413201848),complex(150.90621, 479.851164854),complex(170.08704, 540.84231703),complex(134.23536, 460.23552),complex(331.837935, 783.490514121),complex(2013.922272, 587.393996),complex(2032.267584, 592.744712),complex(2004.263808, 584.576944),complex(2023.32672, 590.13696),complex(2041.49376, 595.43568),complex(2012.8128, 587.0704),complex(2040.140352, 595.040936),complex(1998.124032, 582.786176),complex(2023.459776, 590.175768),complex(1995.309312, 581.965216),complex(2028.096576, 591.528168),complex(1996.161024, 582.213632),complex(552.525687, 931.898925115),complex(147.718924, 487.486021715),complex(137.541888, 490.4949133),complex(155.996288, 534.844416),complex(130.246299, 464.477753392),complex(168.173568, 497.908089133),complex(106.77933, 380.79103735),complex(94.445568, 323.813376),complex(130.56572, 317.819806804),complex(121.9515, 211.226194059),complex(161.905679, 360.175184866),complex(176.990625, 584.085324519),complex(146.33332, 501.71424),complex(173.06086, 593.35152),complex(145.07046, 517.342925379),complex(188.764668, 522.114985698),complex(88.4058, 342.394191108),complex(117.010432, 346.43042482),complex(173.787341, 326.374998375),complex(135.315969, 185.177207573),complex(164.55528, 413.181298415),complex(150.382568, 515.597376),complex(151.517898, 540.335452156),complex(154.275128, 509.122097304),complex(142.072704, 506.652479794),complex(171.58086, 490.815333752),complex(99.13293, 368.167736052),complex(94.5507, 366.193286472),complex(106.020684, 378.085592416),complex(194.79336, 356.012659157),complex(239.327564, 302.865870739),complex(152.75808, 209.046388964),complex(218.58576, 486.26562702),complex(207.109793, 683.481346289),complex(169.5456, 581.2992),complex(215.87571, 712.409677807),complex(186.858018, 573.073382584),complex(199.81808, 534.79864699),complex(108.676568, 403.611655607),complex(99.930348, 356.366544701),complex(151.759998, 358.315027653),complex(286.652289, 300.697988258),complex(292.921008, 266.244164873),complex(300.5829, 265.089200586),complex(296.20425, 261.22759426),complex(195.74251, 216.883021899),complex(100.34136, 260.038063655),complex(312.36975, 275.4842252),complex(287.90921, 261.688800332),complex(85.442292, 140.349851956),complex(44.8647, 109.208529515)'
-		self.ShortProfile = 'complex(55.4322002, 176.614124563),complex(1656.3692234, 589.709129277), complex(169.9537144, 479.828648509), complex(142.144421467, 411.110341273), complex(208.440397733, 419.652821089)'
 		self.name = "WashingMachine"
 			
 	def writeDevice(self, hnum):
@@ -494,7 +497,6 @@ class DeviceDishwasher(TimeShiftableDevice):
 			
 	def generate(self, consumption = 0):
 		self.LongProfile = 'complex(2.343792, 9.91720178381),complex(0.705584, 8.79153133754),complex(0.078676, 7.86720661017),complex(0.078744, 7.87400627016),complex(0.078948, 7.89440525013),complex(0.079152, 7.91480423011),complex(0.079016, 7.90120491012),complex(0.078812, 7.88080593015),complex(0.941108, 3.10574286964),complex(10.449, 18.0981988883),complex(4.523148, 1.78766247656),complex(34.157214, 15.5624864632),complex(155.116416, 70.6731270362),complex(158.38641, 72.1629803176),complex(158.790988, 67.6446776265),complex(158.318433, 72.1320090814),complex(158.654276, 67.5864385584),complex(131.583375, 109.033724507),complex(13.91745, 13.0299198193),complex(4.489968, 1.91271835851),complex(1693.082112, 669.148867416),complex(3137.819256, 447.115028245),complex(3107.713851, 442.825240368),complex(3120.197256, 444.604029241),complex(3123.464652, 445.069607955),complex(3114.653256, 443.814052026),complex(3121.27497, 444.757595169),complex(3116.305863, 444.04953577),complex(3106.801566, 442.695246796),complex(3117.703743, 444.248722882),complex(3118.851648, 444.412290486),complex(3110.016195, 443.15330662),complex(3104.806122, 442.410911425),complex(1148.154728, 416.724520071),complex(166.342624, 70.8616610914),complex(161.205252, 68.6731497838),complex(160.049824, 68.1809395169),complex(158.772588, 67.6368392593),complex(158.208076, 67.3963581543),complex(157.926096, 67.2762351774),complex(157.01364, 66.8875305491),complex(112.30272, 108.243298437),complex(11.65632, 9.35164905552),complex(17.569056, 18.4299236306),complex(4.947208, 2.10750178285),complex(4.724016, 2.012422389),complex(143.12025, 65.2075123351),complex(161.129536, 68.6408949029),complex(160.671915, 63.501604078),complex(23.764224, 12.8265693277),complex(136.853808, 62.352437012),complex(159.11184, 62.8850229849),complex(159.464682, 63.0244750664),complex(159.04302, 62.8578235805),complex(36.68544, 55.7061505818),complex(9.767628, 7.07164059421),complex(4.902772, 2.08857212612),complex(2239.315008, 885.033921728),complex(3116.846106, 444.126516228),complex(3111.034014, 443.298337972),complex(3118.112712, 444.306997808),complex(3111.809778, 443.408878355),complex(3113.442189, 443.641484325),complex(3110.529708, 443.226478259),complex(3104.676432, 442.392431601),complex(3101.093424, 441.881880613),complex(3121.076178, 444.729268843),complex(1221.232208, 443.248103556),complex(159.964185, 63.2218912841),complex(2663.07828, 966.568347525),complex(272.524675, 436.038267268),complex(7.76832, 5.82624),complex(3.258112, 1.75854256572),complex(3.299408, 1.69033685682),complex(3.295136, 1.68814824631),complex(3.256704, 1.75778260783),complex(3.258112, 1.75854256572),complex(3.262336, 1.7608224394),complex(2224.648744, 807.439674778),complex(367.142872, 587.426961418),complex(4.711025, 11.8288968082)'
-		self.ShortProfile = 'complex(663.8757034, 226.767498727),complex(2196.57335247, 342.08616054),complex(104.5642258, 49.3428956589),complex(2111.9711078, 363.134565745),complex(381.4368206, 193.026161596)'
 		self.name = "Dishwasher"
 			
 	def writeDevice(self, hnum):
