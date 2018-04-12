@@ -51,7 +51,7 @@ class neighbourhood:
 	
 	# Add Combined Heat Power
 	i = 0
-	while i < (round(len(config.householdList)*(config.penetrationCHP/100))):
+	while i < (round(len(config.householdList)*(config.penetrationCHP/100))) - (round(len(config.householdList)*(config.penetrationPV/100))):
 		j = random.randint(0,len(config.householdList)-1)
 		if config.householdList[j].hasCHP == False and pvList[j] == 0: # First supply houses without PV
 			config.householdList[j].hasCHP = True

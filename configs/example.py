@@ -65,10 +65,10 @@ penetrationEV 				= 13
 penetrationPHEV 			= 32
 
 # PV and storage, restriction that Battery <= PV
-# Note PV and battery size depend on the annual household consumption 
+# Note PV and battery size depend on the annual household consumption
 # This emulates the Dutch "nul-op-the-meter regime (net zero annual electricity usage)
 penetrationPV				= 50
-penetrationBattery 			= 10	#Note only houses with PV will receive a battery! 
+penetrationBattery 			= 10	#Note only houses with PV will receive a battery!
 
 # Heating systems, with restriction that the sum <= 100
 penetrationHeatPump 		= 25
@@ -106,12 +106,12 @@ powerBatteryLarge = 	3700 	#W
 powerBatteryMedium = 	3700  	#W
 powerBatterySmall = 	3700 	#W
 
-				
-#Kitchen					
+
+#Kitchen
 #Consumption of devices
 ConsumptionOven = 				2000	#W
 ConsumptionMicroWave = 			800		#W
-ConsumptionStoveVentilation = 	120 	#W #But this is maximum, usually set lower! 
+ConsumptionStoveVentilation = 	120 	#W #But this is maximum, usually set lower!
 ConsumptionInductionStove = 	2200 	#W #http://homeguides.sfgate.com/many-watts-induction-stove-85380.html
 
 ConsumptionFridgeBigMin = 		80		#W
@@ -122,7 +122,7 @@ ConsumptionFridgeSmallMax = 	80		#W
 ConsumptionKettle = 			2000	#W
 
 #White goods
-ConsumptionIron = 				2000	#W	
+ConsumptionIron = 				2000	#W
 ConsumptionVacuumcleaner = 		1500	#W
 
 #House
@@ -147,21 +147,21 @@ import households
 
 for i in range(0,2):
 	householdList.append(households.HouseholdSingleWorker())
-	
+
 for i in range(0,20):
 	householdList.append(households.HouseholdSingleRetired())
-	
+
 for i in range(0,6):
 	householdList.append(households.HouseholdDualWorker(True))
-	
+
 for i in range(0,6):
 	householdList.append(households.HouseholdDualWorker(False))
-	
+
 for i in range(0,16):
-	householdList.append(households.HouseholdDualRetired())	
-	
+	householdList.append(households.HouseholdDualRetired())
+
 for i in range(0,20):
 	householdList.append(households.HouseholdFamilyDualWorker(True))
-	
+
 for i in range(0,10):
 	householdList.append(households.HouseholdFamilyDualWorker(False))
