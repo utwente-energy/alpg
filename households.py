@@ -399,8 +399,6 @@ class Household:
 		config.writer.writeHousehold(self, num)
 		
 		
-		
-		
 
 class HouseholdSingleWorker(Household):
 	def __init__(self):
@@ -436,16 +434,83 @@ class HouseholdSingleWorker(Household):
 		if self.hasDishwasher:
 			self.generateDishwashdays(3)
 
+class HouseholdSingleJobless(Household):
+	def __init__(self):
+		self.generate()
+		self.ConsumptionYearly		= profilegentools.gaussMinMax(2010,400)*config.consumptionFactor #kWh http://www.nibud.nl/uitgaven/huishouden/gas-elektriciteit-en-water.html
 		
+		self.Persons = [ persons.PersonJobless(random.randint(26,65))]
+		
+		#For information about commuters, see this:
+		#http://www.kimnet.nl/publicatie/mobiliteitsbalans-2013
+		#Approx 50% uses the car to commute, which is our interrest as this part can be replaced by (PH)EV
+		#http://www.cbs.nl/NR/rdonlyres/13516DAC-36E1-47B7-9918-2364EF7D0B48/0/2011k2v4p34art.pdf
+		#3 out of 5 working people don't work in town. Fair to assume that these people commute by car
+		#Average commute distance is not too clear from multiple sources, such as the once above. Something around 20km seems to be average in most sources
+		#However 30 is also mentioned: http://www.nederlandheeftwerk.nl/index.php/cms_categorie/58707/bb/1/id/58707
+		#Depends also on the region and work in vicinity.
+		
+		if(random.randint(1,2) == 1):
+			self.Fridges = [ devices.DeviceFridge(random.randint(config.ConsumptionFridgeBigMin,config.ConsumptionFridgeBigMax)) ]
+		else:
+			self.Fridges = [ devices.DeviceFridge(random.randint(config.ConsumptionFridgeSmallMin,config.ConsumptionFridgeSmallMax)), devices.DeviceFridge(random.randint(config.ConsumptionFridgeSmallMin,config.ConsumptionFridgeSmallMax)) ]
+			
+		#We synchronize the dishwasher and dryer based on the annual consumption. Furthermore, this also influences the number of washes.		
+		self.hasDishwasher = random.randint(0,5) == 0 	#20%
+		
+		#Determine washing days
+		self.generateWashingdays(random.randint(2,3))
+		
+		
+		#Dermine Dishwasher times
+		if self.hasDishwasher:
+			self.generateDishwashdays(3)
+			
+class HouseholdSingleParttime(Household):
+	def __init__(self):
+		self.generate()
+		self.ConsumptionYearly		= profilegentools.gaussMinMax(2010,400)*config.consumptionFactor #kWh http://www.nibud.nl/uitgaven/huishouden/gas-elektriciteit-en-water.html
+		
+		self.Persons = [ persons.PersonParttimeWorker(random.randint(26,65))]
+		
+		#For information about commuters, see this:
+		#http://www.kimnet.nl/publicatie/mobiliteitsbalans-2013
+		#Approx 50% uses the car to commute, which is our interrest as this part can be replaced by (PH)EV
+		#http://www.cbs.nl/NR/rdonlyres/13516DAC-36E1-47B7-9918-2364EF7D0B48/0/2011k2v4p34art.pdf
+		#3 out of 5 working people don't work in town. Fair to assume that these people commute by car
+		#Average commute distance is not too clear from multiple sources, such as the once above. Something around 20km seems to be average in most sources
+		#However 30 is also mentioned: http://www.nederlandheeftwerk.nl/index.php/cms_categorie/58707/bb/1/id/58707
+		#Depends also on the region and work in vicinity.
+		
+		if(random.randint(1,2) == 1):
+			self.Fridges = [ devices.DeviceFridge(random.randint(config.ConsumptionFridgeBigMin,config.ConsumptionFridgeBigMax)) ]
+		else:
+			self.Fridges = [ devices.DeviceFridge(random.randint(config.ConsumptionFridgeSmallMin,config.ConsumptionFridgeSmallMax)), devices.DeviceFridge(random.randint(config.ConsumptionFridgeSmallMin,config.ConsumptionFridgeSmallMax)) ]
+			
+		#We synchronize the dishwasher and dryer based on the annual consumption. Furthermore, this also influences the number of washes.		
+		self.hasDishwasher = random.randint(0,5) == 0 	#20%
+		
+		#Determine washing days
+		self.generateWashingdays(random.randint(2,3))
+		
+		
+		#Dermine Dishwasher times
+		if self.hasDishwasher:
+			self.generateDishwashdays(3)
 
-class HouseholdDualWorker(Household):
-	def __init__(self, parttime):
+class HouseholdCouple(Household):
+	# Select whether the second adult is a fulltime worker (both false), parttime or jobless
+	def __init__(self, parttime=False, jobless=False):
 		self.generate()
 		self.ConsumptionYearly		= profilegentools.gaussMinMax(3360,700)*config.consumptionFactor #kWh http://www.nibud.nl/uitgaven/huishouden/gas-elektriciteit-en-water.html
+		
+		assert(parttime == False or jobless == False) # ONLY one van be active
 		
 		age = random.randint(26,65)
 		if parttime == True:
 			self.Persons = [ persons.PersonWorker(age), persons.PersonParttimeWorker(age)]
+		elif jobless == True:
+			self.Persons = [ persons.PersonWorker(age), persons.PersonJobless(age)]
 		else:
 			self.Persons = [ persons.PersonWorker(age), persons.PersonWorker(age)]
 		
@@ -465,23 +530,30 @@ class HouseholdDualWorker(Household):
 		
 		#Dermine Dishwasher times
 		if self.hasDishwasher:
-			self.generateDishwashdays(3)
+			self.generateDishwashdays(3)		
+
+class HouseholdDualWorker(HouseholdCouple):
+	def __init__(self, parttime=False, jobless=False):
+		HouseholdCouple.__init__(self, parttime, jobless)
+	# Added this class for backwards compatibility
 	
-	
-class HouseholdFamilyDualWorker(Household):		
-	def __init__(self, parttime):
+class HouseholdFamilyDualParent(Household):	
+	# Select whether the second adult is a fulltime worker (both false), parttime or jobless
+	def __init__(self, parttime=False, jobless=False):
 		self.generate()
 		numKids = round(max(min(4, random.gauss(1.7, 0.4)), 1))	# http://www.cbs.nl/nl-NL/menu/themas/bevolking/faq/specifiek/faq-hoeveel-kinderen.htm
 
 		self.ConsumptionYearly		= profilegentools.gaussMinMax(2010+(700*numKids),500+(numKids*100))*config.consumptionFactor #kWh http://www.nibud.nl/uitgaven/huishouden/gas-elektriciteit-en-water.html
 		
 		ageParents = random.randint(40,55)
-		self.Persons = [ persons.PersonWorker(ageParents)]
-		
-		self.Persons.append(copy.deepcopy(self.Persons[0]))  #Make a copy, we expect a household to be rather synchronized!
 		if parttime == True:
-			self.Persons[1].generateWorkdays(random.randint(2,3))
-		
+			self.Persons = [ persons.PersonWorker(ageParents), persons.PersonParttimeWorker(ageParents)]
+		elif jobless == True:
+			self.Persons = [ persons.PersonWorker(ageParents), persons.PersonJobless(ageParents)]
+		else:
+			self.Persons = [ persons.PersonWorker(ageParents)]
+			self.Persons.append(copy.deepcopy(self.Persons[0]))  #Make a copy, we expect a household to be rather synchronized!
+			
 		#To make life easy, only one persons.Person will use the electric vehicle, so only the main persons.Person will receive a driving distance
 		self.Persons[0].setDistanceToWork(round(max(0, random.gauss(config.commuteDistanceMean, config.commuteDistanceSigma))))	
 				
@@ -499,24 +571,30 @@ class HouseholdFamilyDualWorker(Household):
 		#Dermine Dishwasher times
 		if self.hasDishwasher:
 			self.generateDishwashdays(min(5+numKids, 7))
-		
+
+class HouseholdFamilyDualWorker(HouseholdFamilyDualParent):			
+	def __init__(self, parttime=False, jobless=False):
+		HouseholdFamilyDualParent.__init__(self, parttime, jobless)
+	# Added this class for backwards compatibility
 	
-class HouseholdFamilySingleWorker(Household):		
-	def __init__(self, parttime):
+class HouseholdFamilySingleParent(Household):		
+	def __init__(self, parttime=False, jobless=False):
 		self.generate()
 		numKids = round(max(min(4, random.gauss(1.7, 0.4)), 1))	# http://www.cbs.nl/nl-NL/menu/themas/bevolking/faq/specifiek/faq-hoeveel-kinderen.htm
 	
 		self.ConsumptionYearly		= profilegentools.gaussMinMax(3360+(700*numKids),500+(numKids*100))*config.consumptionFactor #kWh http://www.nibud.nl/uitgaven/huishouden/gas-elektriciteit-en-water.html
 		
 		ageParents = random.randint(40,55)
-		self.Persons = [ persons.PersonWorker(ageParents)]
-		
-		self.Persons.append(copy.deepcopy(self.Persons[0]))  #Make a copy, we expect a household to be rather synchronized!
 		if parttime == True:
-			self.Persons[1].generateWorkdays(random.randint(2,3))
-		
-		#To make life easy, only one persons.Person will use the electric vehicle, so only the main persons.Person will receive a driving distance
-		self.Persons[0].setDistanceToWork(round(max(0, random.gauss(config.commuteDistanceMean, config.commuteDistanceSigma))))	
+			self.Persons = [ persons.PersonParttimeWorker(ageParents) ]
+		elif jobless == True:
+			self.Persons = [ persons.PersonJobless(ageParents) ]
+		else:
+			self.Persons = [ persons.PersonWorker(ageParents) ]
+			
+		if not jobless:
+			#To make life easy, only one persons.Person will use the electric vehicle, so only the main persons.Person will receive a driving distance
+			self.Persons[0].setDistanceToWork(round(max(0, random.gauss(config.commuteDistanceMean, config.commuteDistanceSigma))))	
 				
 		#now add the kids
 		for i in range(0,numKids):
@@ -532,35 +610,6 @@ class HouseholdFamilySingleWorker(Household):
 		#Dermine Dishwasher times
 		if self.hasDishwasher:
 			self.generateDishwashdays(min(5+numKids, 7))
-		
-	
-class HouseholdFamilySingleParent(Household):
-	def __init__(self, parttime):
-		self.generate()
-		numKids = round(max(min(4, random.gauss(1.7, 0.4)), 1))	# http://www.cbs.nl/nl-NL/menu/themas/bevolking/faq/specifiek/faq-hoeveel-kinderen.htm
-	
-		self.ConsumptionYearly		= profilegentools.gaussMinMax(2500+(700*numKids),500+(numKids*100))*config.consumptionFactor #kWh http://www.nibud.nl/uitgaven/huishouden/gas-elektriciteit-en-water.html
-		
-		ageParents = random.randint(40,55)
-		self.Persons = [ persons.PersonWorker(ageParents)]
-		
-		#To make life easy, only one persons.Person will use the electric vehicle, so only the main persons.Person will receive a driving distance
-		self.Persons[0].setDistanceToWork(round(max(0, random.gauss(config.commuteDistanceMean, config.commuteDistanceSigma))))	
-				
-		#now add the kids
-		for i in range(0,numKids):
-			self.Persons.append(persons.PersonStudent(random.randint(ageParents-3,ageParents+3)-30))
-
-		self.Fridges = [ devices.DeviceFridge(random.randint(config.ConsumptionFridgeSmallMin,config.ConsumptionFridgeSmallMax)), devices.DeviceFridge(random.randint(config.ConsumptionFridgeSmallMin,config.ConsumptionFridgeSmallMax)) ]
-		self.hasDishwasher = random.randint(0,5) < 4 #60%
-		
-		#Determine washing days
-		self.generateWashingdays(min(5+numKids, 7))
-		
-		#Dermine Dishwasher times
-		if self.hasDishwasher:
-			self.generateDishwashdays(min(5+numKids, 7))
-			
 	
 class HouseholdDualRetired(Household):	
 	def __init__(self):
@@ -575,7 +624,6 @@ class HouseholdDualRetired(Household):
 		else:
 			self.Fridges = [ devices.DeviceFridge(random.randint(config.ConsumptionFridgeSmallMin,config.ConsumptionFridgeSmallMax)), devices.DeviceFridge(random.randint(config.ConsumptionFridgeSmallMin,config.ConsumptionFridgeSmallMax)) ]
 			
-	
 		self.hasDishwasher = random.randint(0,5) < 3 #40%
 		
 		#Determine washing days
@@ -599,7 +647,6 @@ class HouseholdSingleRetired(Household):
 		else:
 			self.Fridges = [ devices.DeviceFridge(random.randint(config.ConsumptionFridgeSmallMin,config.ConsumptionFridgeSmallMax)), devices.DeviceFridge(random.randint(config.ConsumptionFridgeSmallMin,config.ConsumptionFridgeSmallMax)) ]
 			
-		
 		self.hasDishwasher = random.randint(0,5) < 3 #40%
 		
 		#Determine washing days
@@ -608,5 +655,4 @@ class HouseholdSingleRetired(Household):
 		#Dermine Dishwasher times
 		if self.hasDishwasher:
 			self.generateDishwashdays(3)
-		
-		
+			

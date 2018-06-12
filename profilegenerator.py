@@ -21,7 +21,7 @@
 #config = importlib.import_module(cfgFile)
 import os, sys, getopt
 
-print("Profilegenerator 1.2\n")
+print("Profilegenerator 1.3\n")
 print("Copyright (C) 2018 Gerwin Hoogsteen")
 print("This program comes with ABSOLUTELY NO WARRANTY.")
 print("This is free software, and you are welcome to redistribute it under certain conditions.")
@@ -67,6 +67,8 @@ if(len(sys.argv) > 1):
 		else:
 			print("Config directory is not empty! Provide the --force flag to delete the contents")
 			exit()
+			
+			
 
 
 else:
@@ -100,6 +102,9 @@ if config.penetrationHeatPump + config.penetrationCHP > 100:
 
 # Randomize using the seed
 random.seed(config.seed)
+
+# Create empty files
+config.writer.createEmptyFiles()
 
 #import neighbourhood
 import neighbourhood

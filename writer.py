@@ -50,6 +50,64 @@ def writeCsvRow(fname, hnum, data):
 				f.write(line)
 				j = j + 1	
 
+
+def createFile(fname):
+    if os.path.exists(fname):
+        os.utime(outputFolder+'/'+fname, None)
+    else:
+        open(outputFolder+'/'+fname, 'a').close()
+
+# Function to create empty files to ensure that certain software doesn't crash for lack of files
+def createEmptyFiles():
+	createFile('Electricity_Profile.csv')
+	createFile('Electricity_Profile_GroupOther.csv')
+	createFile('Electricity_Profile_GroupInductive.csv')
+	createFile('Electricity_Profile_GroupFridges.csv')
+	createFile('Electricity_Profile_GroupElectronics.csv')
+	createFile('Electricity_Profile_GroupLighting.csv')
+	createFile('Electricity_Profile_GroupStandby.csv')
+	
+	createFile('Reactive_Electricity_Profile.csv')
+	createFile('Reactive_Electricity_Profile_GroupOther.csv')
+	createFile('Reactive_Electricity_Profile_GroupInductive.csv')
+	createFile('Reactive_Electricity_Profile_GroupFridges.csv')
+	createFile('Reactive_Electricity_Profile_GroupElectronics.csv')
+	createFile('Reactive_Electricity_Profile_GroupLighting.csv')
+	createFile('Reactive_Electricity_Profile_GroupStandby.csv')
+
+	createFile('Electricity_Profile_PVProduction.csv')
+	createFile('PhotovoltaicSettings.txt')
+	createFile('Electricity_Profile_PVProduction.csv')
+	createFile('BatterySettings.txt')
+	createFile('HeatingSettings.txt')
+		
+	createFile('ElectricVehicle_Starttimes.txt')
+	createFile('ElectricVehicle_Endtimes.txt')
+	createFile('ElectricVehicle_RequiredCharge.txt')	
+	createFile('ElectricVehicle_Specs.txt')
+
+	createFile('WashingMachine_Starttimes.txt')
+	createFile('WashingMachine_Endtimes.txt')
+	createFile('WashingMachine_Profile.txt')
+		
+	createFile('Dishwasher_Starttimes.txt')
+	createFile('Dishwasher_Endtimes.txt')
+	createFile('Dishwasher_Profile.txt')
+
+	createFile('Thermostat_Starttimes.txt')
+	createFile('Thermostat_Setpoints.txt')
+	
+	# Save HeatGain profiles
+	createFile('Heatgain_Profile.csv')
+	createFile('Heatgain_Profile_Persons.csv')
+	createFile('Heatgain_Profile_Devices.csv')
+
+	# Safe TapWater profiles
+	createFile('Heatdemand_Profile.csv')
+	createFile('Heatdemand_Profile_DHWTap.csv')
+
+	createFile('Airflow_Profile_Ventilation.csv')
+
 def writeNeighbourhood(num):
 	pass
 

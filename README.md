@@ -191,6 +191,10 @@ https://research.utwente.nl/en/publications/towards-100-renewable-energy-supply-
 Changelog
 --------------
 
+**Version 1.3**
+- Creation of empty files on start
+- Added new household types, including jobless persons
+
 **Version 1.2**
 - Improved the PV panel model
 - Additional checks to prevent overwriting on the output folder
