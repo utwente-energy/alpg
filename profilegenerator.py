@@ -21,8 +21,8 @@
 #config = importlib.import_module(cfgFile)
 import os, sys, getopt
 
-print("Profilegenerator 1.3\n")
-print("Copyright (C) 2018 Gerwin Hoogsteen")
+print("Profilegenerator 1.3.1\n")
+print("Copyright (C) 2019 Gerwin Hoogsteen")
 print("This program comes with ABSOLUTELY NO WARRANTY.")
 print("This is free software, and you are welcome to redistribute it under certain conditions.")
 print("See the acompanying license for more information.\n")
