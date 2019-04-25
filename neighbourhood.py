@@ -56,7 +56,7 @@ class neighbourhood:
 		if config.householdList[j].hasCHP == False and pvList[j] == 0: # First supply houses without PV
 			config.householdList[j].hasCHP = True
 			i = i + 1
-	if (round(len(config.householdList)*(config.penetrationPV/100))) < (round(len(config.householdList)*(config.penetrationCHP/100))): # If there are too much CHPs compared to PV, add some more CHPS
+	if (round(len(config.householdList)*(config.penetrationPV/100))) > (round(len(config.householdList)*(config.penetrationCHP/100))): # If there are too much CHPs compared to PV, add some more CHPS
 		while i < (round(len(config.householdList)*(config.penetrationCHP/100))):
 			j = random.randint(0,len(config.householdList)-1)
 			if config.householdList[j].hasCHP == False: # First supply houses without PV
