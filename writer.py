@@ -170,7 +170,7 @@ def writeHousehold(house, num):
 	if house.hasHP:
 		text = str(num)+':HP'			# Heat pump
 		writeCsvLine('HeatingSettings.txt', num, text)
-	elif house.hasHP:
+	elif house.hasCHP:
 		text = str(num)+':CHP'			# Combined Heat Power
 		writeCsvLine('HeatingSettings.txt', num, text)
 	else:
