@@ -21,19 +21,19 @@
 #config = importlib.import_module(cfgFile)
 import os, sys, getopt
 
-print("Profilegenerator 1.3.1\n")
-print("Copyright (C) 2019 Gerwin Hoogsteen")
-print("This program comes with ABSOLUTELY NO WARRANTY.")
-print("This is free software, and you are welcome to redistribute it under certain conditions.")
-print("See the acompanying license for more information.\n")
+print("Profilegenerator 1.3.1\n", flush=True)
+print("Copyright (C) 2019 Gerwin Hoogsteen", flush=True)
+print("This program comes with ABSOLUTELY NO WARRANTY.", flush=True)
+print("This is free software, and you are welcome to redistribute it under certain conditions.", flush=True)
+print("See the acompanying license for more information.\n", flush=True)
 
 if(len(sys.argv) > 1):
 	#Get arguments:
 	try:
 		opts, args = getopt.getopt(sys.argv[1:],"c:o:f",["config=","output=", "force"])
 	except getopt.GetoptError:
-		print("Usage:")
-		print('profilegenerator.py -c <config> [-o <output subfolder> -f]')
+		print("Usage:", flush=True)
+		print('profilegenerator.py -c <config> [-o <output subfolder> -f]', flush=True)
 		sys.exit(2)
 
 	# Default write into a new folder
@@ -63,17 +63,17 @@ if(len(sys.argv) > 1):
 					if os.path.isfile(fp):
 						os.unlink(fp)
 				except Exception as e:
-					print(e)
+					print(e, flush=True)
 		else:
-			print("Config directory is not empty! Provide the --force flag to delete the contents")
+			print("Config directory is not empty! Provide the --force flag to delete the contents", flush=True)
 			exit()
 			
 			
 
 
 else:
-	print("Usage:")
-	print('profilegenerator.py -c <config> [-o <output subfolder> -f]')
+	print("Usage:", flush=True)
+	print('profilegenerator.py -c <config> [-o <output subfolder> -f]', flush=True)
 	exit()
 
 
@@ -82,20 +82,20 @@ import profilegentools
 from configLoader import *
 config = importlib.import_module(cfgFile)
 
-print('Loading config: '+cfgFile)
-print("The current config will create and simulate "+str(len(config.householdList))+" households")
-print("Results will be written into: "+cfgOutputDir+"\n")
-print("NOTE: Simulation may take a (long) while...\n")
+print('Loading config: '+cfgFile, flush=True)
+print("The current config will create and simulate "+str(len(config.householdList))+" households", flush=True)
+print("Results will be written into: "+cfgOutputDir+"\n", flush=True)
+print("NOTE: Simulation may take a (long) while...\n", flush=True)
 
 # Check the config:
 if config.penetrationEV + config.penetrationPHEV > 100:
-	print("Error, the combined penetration of EV and PHEV exceed 100!")
+	print("Error, the combined penetration of EV and PHEV exceed 100!", flush=True)
 	exit()
 if config.penetrationPV < config.penetrationBattery:
-	print("Error, the penetration of PV must be equal or higher than PV!")
+	print("Error, the penetration of PV must be equal or higher than PV!", flush=True)
 	exit()
 if config.penetrationHeatPump + config.penetrationCHP > 100:
-	print("Error, the combined penetration of heatpumps and CHPs exceed 100!")
+	print("Error, the combined penetration of heatpumps and CHPs exceed 100!", flush=True)
 	exit()
 
 
@@ -118,7 +118,7 @@ householdList = config.householdList
 numOfHouseholds = len(householdList)
 
 while len(householdList) > 0:
-	print("Household "+str(hnum+1)+" of "+str(numOfHouseholds))
+	print("Household "+str(hnum+1)+" of "+str(numOfHouseholds), flush=True)
 	householdList[0].simulate()
 	
 	#Warning: On my PC the random number is still the same at this point, but after calling scaleProfile() it isn't!!!
