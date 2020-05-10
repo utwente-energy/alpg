@@ -39,7 +39,7 @@ Furthermore, the tool depends on the Astral package, which can be installed usin
 https://pypi.python.org/pypi/astral
 E.g. use a command like
 ```
-pip3 install astral
+pip3 install astral==1.10.1
 ```
 
 Note that the simulation is quite heavy and is barely optimized. Generation of output therefore takes a long time. So, be patient and don't generate too much households as the tool is aimed at small groups of houses (~100 households max).
