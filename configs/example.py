@@ -1,7 +1,6 @@
 #!/usr/bin/python3    
 
-	#Artifical load profile generator v1.1, generation of artificial load profiles to benchmark demand side management approaches
-    #Copyright (C) 2018 Gerwin Hoogsteen
+    #Copyright (C) 2023 University of Twente
 
     #This program is free software: you can redistribute it and/or modify
     #it under the terms of the GNU General Public License as published by
@@ -61,8 +60,8 @@ consumptionFactor = 1.0 #consumption was a bit too high
 
 # Electric mobility, restriction that the sum <= 100
 # Note, households with larger driving distances will receive EVs first
-penetrationEV 				= 13
-penetrationPHEV 			= 32
+penetrationEV 				= 25
+penetrationPHEV 			= 25
 
 # PV and storage, restriction that Battery <= PV
 # Note PV and battery size depend on the annual household consumption
@@ -79,9 +78,9 @@ penetrationInductioncooking = 25
 
 #Device parameters:
 #EV
-capacityEV = 	42000	#Wh
-powerEV = 		7400	#W
-capacityPHEV = 	12000	#Wh
+capacityEV = 	50000	#Wh
+powerEV = 		11000	#W
+capacityPHEV = 	10000	#Wh
 powerPHEV = 	3700	#W
 
 #PV
@@ -90,8 +89,8 @@ PVAngleMean = 			35 		#degrees, 0 is horizontal to earth surface
 PVAngleSigma = 			10		#degrees
 PVAzimuthMean = 		180 	#degrees, 0 is north, 90 is east
 PVAzimuthSigma = 		90 		#degrees
-PVEfficiencyMin = 		15		#% of theoretical max
-PVEfficiencyMax = 		20		#% of theoretical max
+PVEfficiencyMin = 		18		#% of theoretical max
+PVEfficiencyMax = 		22		#% of theoretical max
 
 #Driving distances
 commuteDistanceMean = 	25		#km
@@ -99,8 +98,8 @@ commuteDistanceSigma = 	10		#km
 
 
 #Battery
-capacityBatteryLarge = 	12000 	#Wh
-capacityBatteryMedium = 5000  	#Wh
+capacityBatteryLarge = 	5000 	#Wh
+capacityBatteryMedium = 4000  	#Wh
 capacityBatterySmall = 	2000 	#Wh
 powerBatteryLarge = 	3700 	#W
 powerBatteryMedium = 	3700  	#W

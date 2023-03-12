@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
-	#Artifical load profile generator v1.2, generation of artificial load profiles to benchmark demand side management approaches
-    #Copyright (C) 2018 Gerwin Hoogsteen
+    #Copyright (C) 2023 University of Twente
 
     #This program is free software: you can redistribute it and/or modify
     #it under the terms of the GNU General Public License as published by
@@ -21,8 +20,8 @@
 #config = importlib.import_module(cfgFile)
 import os, sys, getopt
 
-print("Profilegenerator 1.3.1\n", flush=True)
-print("Copyright (C) 2019 Gerwin Hoogsteen", flush=True)
+print("Profilegenerator 1.3.2\n", flush=True)
+print("Copyright (C) 2023 University of Twente", flush=True)
 print("This program comes with ABSOLUTELY NO WARRANTY.", flush=True)
 print("This is free software, and you are welcome to redistribute it under certain conditions.", flush=True)
 print("See the acompanying license for more information.\n", flush=True)

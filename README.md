@@ -30,7 +30,7 @@ Here, the parameters are:
 
 So, to run the configs/example.py configuration and write results into output/results/, a command (depending on your operating system) like this should be issued on the commandline:
 ```
-python3 profilegenerator.py -c example -o results
+python profilegenerator.py -c example -o results
 ```
 
 The tool is written in the Python3 language and should work on all major platforms. 

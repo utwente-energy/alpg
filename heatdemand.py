@@ -1,6 +1,5 @@
 
-	#Artifical load profile generator v1.2, generation of artificial load profiles to benchmark demand side management approaches
-    #Copyright (C) 2018 Gerwin Hoogsteen
+    #Copyright (C) 2023 University of Twente
 
     #This program is free software: you can redistribute it and/or modify
     #it under the terms of the GNU General Public License as published by
@@ -14,7 +13,6 @@
 
     #You should have received a copy of the GNU General Public License
     #along with this program.  If not, see <http://www.gnu.org/licenses/>.
-    
 
 
 # Within this file, models to generate heat-specific profile and data are provided.
