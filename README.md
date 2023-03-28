@@ -70,7 +70,7 @@ Where (Parttime) is an argument that specifies if one of the workers has a part-
 	
 **Solar irradiation file**
 
-This must be a single column CSV file with one value on each row for the corresponding interval. The timebase can be given (default 3600 seconds) to specify the interval length of the dataset. The required informaiton is the global horizontal irradiation (GHI) and must be provided in J/cm2 (joules per square centimeter). Dutch weather data can be found and downloaded from the KNMI website: http://projects.knmi.nl/klimatologie/uurgegevens/selectie.cgi. The provided data contains the 2014 measurements of weather station Twenthe, Netherlands.
+This must be a single column CSV file with one value on each row for the corresponding interval. The timebase can be given (default 3600 seconds) to specify the interval length of the dataset. The required informaiton is the global horizontal irradiation (GHI) and must be provided in J/cm2 (joules per square centimeter). Dutch weather data can be found and downloaded from the KNMI website: http://projects.knmi.nl/klimatologie/uurgegevens/selectie.cgi. The provided data contains the 2022 measurements of weather station Twenthe, Netherlands.
 
 Generation
 --------------
