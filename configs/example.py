@@ -1,23 +1,23 @@
 #!/usr/bin/python3    
 
-    #Copyright (C) 2023 University of Twente
+#Copyright (C) 2023 University of Twente
 
-    #This program is free software: you can redistribute it and/or modify
-    #it under the terms of the GNU General Public License as published by
-    #the Free Software Foundation, either version 3 of the License, or
-    #(at your option) any later version.
+#This program is free software: you can redistribute it and/or modify
+#it under the terms of the GNU General Public License as published by
+#the Free Software Foundation, either version 3 of the License, or
+#(at your option) any later version.
 
-    #This program is distributed in the hope that it will be useful,
-    #but WITHOUT ANY WARRANTY; without even the implied warranty of
-    #MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    #GNU General Public License for more details.
+#This program is distributed in the hope that it will be useful,
+#but WITHOUT ANY WARRANTY; without even the implied warranty of
+#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#GNU General Public License for more details.
 
-    #You should have received a copy of the GNU General Public License
-    #along with this program.  If not, see <http://www.gnu.org/licenses/>.
-    
-    
+#You should have received a copy of the GNU General Public License
+#along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-    
+
+
+
 #This is an example configuration file!
 
 # Select the output writer
@@ -145,22 +145,22 @@ householdList = []
 import households
 
 for i in range(0,1):
-	householdList.append(households.HouseholdSingleWorker())
+    householdList.append(households.HouseholdSingleWorker())
 
 for i in range(0,2):
-	householdList.append(households.HouseholdSingleRetired())
+    householdList.append(households.HouseholdSingleRetired())
 
 for i in range(0,1):
-	householdList.append(households.HouseholdDualWorker(True))
+    householdList.append(households.HouseholdDualWorker(True))
 
 for i in range(0,1):
-	householdList.append(households.HouseholdDualWorker(False))
+    householdList.append(households.HouseholdDualWorker(False))
 
 for i in range(0,2):
-	householdList.append(households.HouseholdDualRetired())
+    householdList.append(households.HouseholdDualRetired())
 
 for i in range(0,2):
-	householdList.append(households.HouseholdFamilyDualWorker(True))
+    householdList.append(households.HouseholdFamilyDualWorker(True))
 
 for i in range(0,1):
-	householdList.append(households.HouseholdFamilyDualWorker(False))
+    householdList.append(households.HouseholdFamilyDualWorker(False))
