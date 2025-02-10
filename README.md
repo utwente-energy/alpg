@@ -219,3 +219,11 @@ Changelog
 - More rounded timeshiftable times to avoid synchronisation with auctions pushing towards the runtime deadlines
 - Fixed a bug resulting in overlapping start + endtimes for EVs
 
+## Acknowledgements
+
+The development and maintenance of this software is made possible through the funding from several research projects:
+
+- This work is part of the research programme Energy Autonomous Smart Micro-grids (EASI) with project number 12700 which is financed by the Netherlands Organisation for Scientific Research (NWO).
+- This research is supported by the RVO TKI iDeego ORTEP project.
+- This research is funded by the Topsector Energy, part of the Netherlands Enterprise Agency (RVO) and funded by the Dutch Ministry of Economic Affairs as part of the TKI program Switch2Smartgrids, Smart Grid Meppelenergie (project number 01005).
+- This research is funded by NWO in the iCARE project (STW project number 11854).
