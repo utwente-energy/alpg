@@ -243,7 +243,7 @@ class Household:
 					self.DishwashMoment[i] = random.randint((19*60), (20*60))
 				else:
 					#Later in the night
-					self.DishwashMoment[i] = random.randint((22*60), (23.5*60))
+					self.DishwashMoment[i] = random.randint((22*60), int(23.5*60))
 	
 	def simulate(self):		
 		for day in range(config.startDay, config.numDays+config.startDay):	
@@ -291,12 +291,12 @@ class Household:
 
 
 			#Select cooking time
-			cookingTime = random.randint(17*60,19.5*60)
+			cookingTime = random.randint(17*60, int(19.5*60))
 			startCooking = cookingTime;
 			cookingDuration = 0
 			count = 0;
 			while self.OccupancyPersonsDay[startCooking] == 0 and count != 100:
-				startCooking = random.randint(17*60,19.5*60)
+				startCooking = random.randint(17*60,int(19.5*60))
 				count += 1
 				if count == 99:
 					startCooking = -1

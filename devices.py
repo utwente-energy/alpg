@@ -435,7 +435,7 @@ class DeviceWashingMachine(TimeShiftableDevice):
 			self.StartTimes.append(washingtimeintervals + (1440*(day)))
 			
 		if washingtimeintervals < 4*60:
-			self.EndTimes.append(1440*(day) + random.randint(6.5*60,7.5*60))
+			self.EndTimes.append(1440*(day) + random.randint(int(6.5*60),int(7.5*60)))
 		elif washingtimeintervals < 11*60:
 			self.EndTimes.append(1440*(day) + random.randint(14*60,17*60))
 		elif washingtimeintervals < 17*60:
@@ -443,7 +443,7 @@ class DeviceWashingMachine(TimeShiftableDevice):
 		elif washingtimeintervals < 20*60:
 			self.EndTimes.append(1440*(day) + random.randint(22*60,23*60))
 		else:
-			self.EndTimes.append(1440*(day+1) + random.randint(6.5*60,7.5*60))
+			self.EndTimes.append(1440*(day+1) + random.randint(int(6.5*60),int(7.5*60)))
 
 		#check for overlap on endTimes:
 		if self.EndTimes[len(self.EndTimes)-1] < self.StartTimes[len(self.StartTimes)-1] + 90:
